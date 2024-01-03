@@ -2,8 +2,9 @@ import telebot
 import os
 
 from dotenv import load_dotenv
-from film_retrieval.tmdb_api import get_movie_from_search
-from film_retrieval.utils import format_movie_details, get_or_create_telegram_user
+from film_retrieval.tmdb_api import get_film_from_search
+from film_retrieval.utils import format_film_details, create_telegram_user, create_film
+from keyboards.keyboard import create_rating_keyboard
 # TODO implement /search_by_actor and /search_by_genre
 
 
@@ -23,7 +24,7 @@ def start_command(message):
     )
     bot.reply_to(message, welcome_message)
 
-    # user = get_or_create_telegram_user(message)
+    create_telegram_user(message)
 
 
 @bot.message_handler(commands=['help'])
@@ -39,31 +40,41 @@ def help_command(message):
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     film_name = message.text
-    movie = get_movie_from_search(film_name)
-
-    if movie:
-        movie_details, keyboard = format_movie_details(movie)
-        response_message = '\n'.join(movie_details)
-        bot.send_message(message.chat.id, response_message, reply_markup=keyboard)
-    else:
-        bot.send_message(message.chat.id, "Sorry, I couldn't find any movies matching that name.")
+    process_and_respond_film(message.chat.id, film_name)
 
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('rec_'))
 def query_callback(call):
-    movie_title = call.data
-    movie = get_movie_from_search(movie_title)
+    film_title = call.data.split('_')[1]
+    process_and_respond_film(call.message.chat.id, film_title)
 
-    if movie:
-        movie_details, keyboard = format_movie_details(movie)
-        response_message = '\n'.join(movie_details)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=response_message,
-                              reply_markup=keyboard)
+
+def process_and_respond_film(chat_id, film_title):
+    film = get_film_from_search(film_title)
+
+    if film:
+        film_details, keyboard = format_film_details(film)
+        response_message = '\n'.join(film_details)
+        bot.send_message(chat_id, response_message, reply_markup=keyboard)
+
+        film_response, error = create_film(film)
+        if error:
+            print(f"Error saving film: {error}")
+
+        rating_message = 'If you have watched the film, please choose a rating.'
+        rating_keyboard = create_rating_keyboard()
+        bot.send_message(chat_id, rating_message, reply_markup=rating_keyboard)
     else:
-        bot.answer_callback_query(call.id, "Sorry, I couldn't find any movies matching that name.")
+        bot.send_message(chat_id, "Sorry, I couldn't find any films matching that name.")
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('rate_'))
+def rating_callback(call):
+    rating = int(call.data.split('_')[1])
+    if 1 <= rating <= 5:
+        bot.answer_callback_query(call.id, text=f"Thanks for rating {rating} stars!")
+    else:
+        bot.answer_callback_query(call.id, text="Invalid rating.")
 
 
 bot.polling(none_stop=True)
-
-
-

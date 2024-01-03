@@ -6,26 +6,26 @@ load_dotenv()
 TMDb_API_KEY = os.getenv('TMDb_API_KEY')
 
 
-def get_movie_from_search(movie_title):
-    search_results = search_movie(movie_title)
+def get_film_from_search(film_title):
+    search_results = search_film(film_title)
     if not search_results:
         return []
 
-    movie = search_results.get('results', [])[0]
-    details = get_movie_details(movie['id'])
+    film = search_results.get('results', [])[0]
+    details = get_film_details(film['id'])
     if details:
-        movie_cast = get_movie_cast(movie['id'])
-        top_cast = [cast_member['name'] for cast_member in movie_cast.get('cast', [])[:5]]
+        film_cast = get_film_cast(film['id'])
+        top_cast = [cast_member['name'] for cast_member in film_cast.get('cast', [])[:5]]
 
-        movie_ratings = get_movie_ratings(movie['id'])
-        us_rating = next((rating['certification'] for country_ratings in movie_ratings.get('results', [])
+        film_ratings = get_film_ratings(film['id'])
+        us_rating = next((rating['certification'] for country_ratings in film_ratings.get('results', [])
                           for rating in country_ratings['release_dates']
                           if country_ratings['iso_3166_1'] == 'US'), 'NR')
 
-        similar_movies = get_similar_movies(movie['id']).get('results')[:5]
-        movies_to_recommend = [movie.get('title') for movie in similar_movies]
+        similar_films = get_similar_films(film['id']).get('results')[:5]
+        films_to_recommend = [film.get('title') for film in similar_films]
 
-        movie_info = {
+        film_info = {
             'title': details.get('title'),
             'poster': f"https://image.tmdb.org/t/p/original{details.get('poster_path')}",
             'release_date': details.get('release_date'),
@@ -33,13 +33,13 @@ def get_movie_from_search(movie_title):
             'genre': ', '.join([genre['name'] for genre in details.get('genres', [])]),
             'actors': ', '.join(top_cast),
             'age_limit': us_rating,
-            'movies_to_recommend': movies_to_recommend
+            'films_to_recommend': films_to_recommend
         }
-        return movie_info
+        return film_info
     return
 
 
-def search_movie(movie_title):
+def search_film(film_title):
     base_url = "https://api.themoviedb.org/3"
     search_url = f"{base_url}/search/movie"
     headers = {
@@ -47,8 +47,8 @@ def search_movie(movie_title):
         "Authorization": TMDb_API_KEY
     }
     params = {
-        'query': movie_title,
-        'include_adult': 'false',
+        'query': film_title,
+        'include_adult': 'true',
         'language': 'en-US',
         'page': 1
     }
@@ -58,8 +58,8 @@ def search_movie(movie_title):
     return None
 
 
-def get_movie_details(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}"
+def get_film_details(film_id):
+    url = f"https://api.themoviedb.org/3/movie/{film_id}"
     headers = {
         'accept': 'application/json',
         "Authorization": TMDb_API_KEY
@@ -70,8 +70,8 @@ def get_movie_details(movie_id):
     return None
 
 
-def get_movie_cast(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}/credits"
+def get_film_cast(film_id):
+    url = f"https://api.themoviedb.org/3/movie/{film_id}/credits"
     headers = {
         'accept': 'application/json',
         "Authorization": TMDb_API_KEY
@@ -82,8 +82,8 @@ def get_movie_cast(movie_id):
     return None
 
 
-def get_movie_ratings(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}/release_dates"
+def get_film_ratings(film_id):
+    url = f"https://api.themoviedb.org/3/movie/{film_id}/release_dates"
     headers = {
         'accept': 'application/json',
         "Authorization": TMDb_API_KEY
@@ -94,8 +94,8 @@ def get_movie_ratings(movie_id):
     return None
 
 
-def get_similar_movies(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}/similar"
+def get_similar_films(film_id):
+    url = f"https://api.themoviedb.org/3/movie/{film_id}/similar"
     headers = {
         'accept': 'application/json',
         "Authorization": TMDb_API_KEY
