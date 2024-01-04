@@ -3,8 +3,8 @@ import os
 
 from dotenv import load_dotenv
 from film_retrieval.tmdb_api import get_film_from_search
-from film_retrieval.utils import format_film_details, create_telegram_user, create_film
-from keyboards.keyboard import create_rating_keyboard
+from film_retrieval.utils import format_film_details, create_telegram_user, create_film, set_user_state, get_user_state
+from keyboards.keyboard import create_rating_keyboard, setup_preference_keyboard
 # TODO implement /search_by_actor and /search_by_genre
 
 
@@ -37,10 +37,24 @@ def help_command(message):
     bot.reply_to(message, help_text)
 
 
+@bot.message_handler(commands=['preferences'])
+def setup_preferences(message):
+    set_user_state(message.chat.id, 'SETTING_PREFERENCES')
+    keyboard = setup_preference_keyboard()
+    bot.send_message(message.chat.id, "Choose your favorite genre:", reply_markup=keyboard)
+
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
-    film_name = message.text
-    process_and_respond_film(message.chat.id, film_name)
+    user_state = get_user_state(message.chat.id).get('state')
+
+    if user_state == 'SETTING_PREFERENCES':
+        genre = message.text
+        bot.send_message(message.chat.id, f"Your favorite genre is: {genre}")
+        set_user_state(message.chat.id, None)
+    else:
+        film_name = message.text
+        process_and_respond_film(message.chat.id, film_name)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('rec_'))

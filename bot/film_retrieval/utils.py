@@ -63,6 +63,28 @@ def create_film(film):
     return response.json(), None
 
 
+def set_user_state(chat_id, state):
+    api_url = 'http://127.0.0.1:8000/api/user_states/'
+    data = {'chat_id': chat_id, 'state': state}
+    try:
+        response = requests.post(api_url, data=data)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return None, e
+    return response.json(), None
+
+
+def get_user_state(chat_id):
+    api_url = f'http://127.0.0.1:8000/api/user_states/{chat_id}/'
+    try:
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            return response.json()
+        return None
+    except requests.exceptions.RequestException as e:
+        return None
+
+
 # def get_or_create_telegram_user(message):
 #     """
 #     Extracts user data from the Telegram message and retrieves an existing TelegramUser from

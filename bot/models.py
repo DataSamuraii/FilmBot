@@ -13,6 +13,14 @@ class TelegramUser(models.Model):
         return f"{self.name} {self.surname}"
 
 
+class TelegramUserState(models.Model):
+    chat_id = models.IntegerField(blank=True, null=True, unique=True, db_index=True)
+    state = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.chat_id} - {self.state}"
+
+
 class Film(models.Model):
     title = models.CharField(max_length=200, unique=True)
     poster_url = models.URLField()
