@@ -1,3 +1,5 @@
+import random
+
 import requests
 import os
 from dotenv import load_dotenv
@@ -103,5 +105,49 @@ def get_similar_films(film_id):
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return response.json()
-    return []
+    return None
 
+
+def get_film_by_actor(actor_name):
+    """ Get a random film featuring the actor. """
+
+    actor_id = search_actor_id(actor_name).get('results')[0]['id']
+
+    base_url = "https://api.themoviedb.org/3"
+    discover_url = f"{base_url}/discover/movie"
+    headers = {
+        'accept': 'application/json',
+        "Authorization": f"{TMDb_API_KEY}"
+    }
+    params = {
+        'with_cast': actor_id,
+        'language': 'en-US',
+        'page': 1
+    }
+    response = requests.get(discover_url, headers=headers, params=params)
+    if response.status_code == 200:
+        results = response.json().get('results')
+        if results:
+            film = random.choice(results)
+            return film['title']
+    return None
+
+
+def search_actor_id(actor_name):
+    """ Get the actor's ID from TMDb. """
+    base_url = "https://api.themoviedb.org/3"
+    search_url = f"{base_url}/search/person"
+    headers = {
+        'accept': 'application/json',
+        "Authorization": TMDb_API_KEY
+    }
+    params = {
+        'query': actor_name,
+        'language': 'en-US',
+        'include_adult': 'true',
+        'page': 1
+    }
+    response = requests.get(search_url, headers=headers, params=params)
+    if response.status_code == 200:
+        return response.json()
+    return None

@@ -9,15 +9,15 @@ class TelegramUserSerializer(serializers.ModelSerializer):
 
 
 class TelegramUserStateSerializer(serializers.ModelSerializer):
-    def save(self, **kwargs):
-        chat_id = self.validated_data.get('chat_id')
-        state = self.validated_data.get('state')
-
-        instance, created = TelegramUserState.objects.update_or_create(
-            chat_id=chat_id,
-            defaults={'state': state}
-        )
-        return instance
+    # def save(self, **kwargs):
+    #     chat_id = self.validated_data.get('chat_id')
+    #     state = self.validated_data.get('state')
+    #
+    #     instance, created = TelegramUserState.objects.update_or_create(
+    #         chat_id=chat_id,
+    #         defaults={'state': state}
+    #     )
+    #     return instance
 
     class Meta:
         model = TelegramUserState

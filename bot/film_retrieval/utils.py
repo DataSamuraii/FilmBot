@@ -75,11 +75,12 @@ def set_user_state(chat_id, state):
 
 
 def get_user_state(chat_id):
-    api_url = f'http://127.0.0.1:8000/api/user_states/{chat_id}/'
+    api_url = 'http://127.0.0.1:8000/api/user_states/'
+    params = {'search': chat_id}
     try:
-        response = requests.get(api_url)
+        response = requests.get(api_url, params=params)
         if response.status_code == 200:
-            return response.json()
+            return response.json()[0]
         return None
     except requests.exceptions.RequestException as e:
         return None
